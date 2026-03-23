@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HONOS · Sistema de Ventas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --cafe:    #3F2919;
+  --arena:   #B78D6D;
+  --bosque:  #363A26;
+  --claro:   #C4A691;
+  --crema:   #F5F0EA;
+  --blanco:  #FDFCFA;
+  --gris:    #E8E2DA;
+  --texto:   #2A1F14;
+  --dis:     #2A6A40;
+  --dis-bg:  #E8F5EE;
+  --cot:     #1A5294;
+  --cot-bg:  #E8EFF8;
+  --res:     #7A5500;
+  --res-bg:  #FFF3D4;
+  --ven:     #8B2020;
+  --ven-bg:  #FAEAEA;
+  --shadow:  0 2px 20px rgba(63,41,25,.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--crema);
+  color: var(--texto);
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════ */
+#topbar {
+  background: var(--cafe);
+  color: var(--crema);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
+}
+#topbar .logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  color: var(--claro);
+}
+#topbar .logo span { color: #fff; }
+.tab-nav {
+  display: flex;
+  gap: 2px;
+  background: rgba(255,255,255,.08);
+  border-radius: 8px;
+  padding: 3px;
+}
+.tab-btn {
+  padding: 6px 18px;
+  border: none;
+  background: transparent;
+  color: rgba(245,240,234,.6);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all .2s;
+  text-transform: uppercase;
+}
+.tab-btn.on { background: var(--arena); color: var(--cafe); }
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.etapa-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(245,240,234,.7);
+}
+.etapa-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #4CAF50;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.save-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(245,240,234,.5);
+}
+#saveDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #4CAF50;
+  transition: background .3s;
+}
+
+/* ═══════════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════════ */
+.page { display: none; padding-top: 52px; }
+.page.on { display: block; }
+
+/* ═══════════════════════════════════════════════
+   PAGE MAPA — layout con sidebar
+═══════════════════════════════════════════════ */
+#pgM {
+  display: none;
+  padding-top: 52px;
+}
+#pgM.on {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  height: 100vh;
+}
+
+/* Columna principal del mapa */
+#mapa-col {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Stats bar */
+#statsbar {
+  background: var(--blanco);
+  border-bottom: 1px solid var(--gris);
+  display: flex;
+  align-items: center;
+  height: 56px;
+  flex-shrink: 0;
+}
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border-right: 1px solid var(--gris);
+  cursor: pointer;
+  transition: background .15s;
+}
+.stat-item:last-child { border-right: none; }
+.stat-item:hover { background: var(--crema); }
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+}
+.stat-lbl {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+  opacity: .6;
+}
+.stat-item.d .stat-num { color: var(--dis); }
+.stat-item.c .stat-num { color: var(--cot); }
+.stat-item.r .stat-num { color: var(--res); }
+.stat-item.v .stat-num { color: var(--ven); }
+
+/* Etapa bar */
+#etapa-bar {
+  background: var(--bosque);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 8px;
+  height: 42px;
+  flex-shrink: 0;
+}
+#etapa-bar .eb-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.45);
+  margin-right: 4px;
+}
+.eb-btn {
+  padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: transparent;
+  color: rgba(255,255,255,.6);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all .2s;
+}
+.eb-btn:hover { border-color: var(--arena); color: var(--claro); }
+.eb-btn.on { background: var(--arena); border-color: var(--arena); color: var(--cafe); font-weight: 600; }
+.eb-precio { margin-left: auto; font-size: 10px; color: rgba(255,255,255,.35); }
+
+/* Grid de unidades */
+#grid-wrap {
+  overflow-y: auto;
+  padding: 16px;
+  flex: 1;
+}
+.floor-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  margin-bottom: 6px;
+  gap: 6px;
+  align-items: start;
+}
+.floor-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(63,41,25,.4);
+  padding-top: 10px;
+  text-align: right;
+  padding-right: 8px;
+}
+.floor-label.ac { color: var(--cafe); opacity: .7; }
+.units-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Unidad */
+.u {
+  background: var(--blanco);
+  border: 1.5px solid var(--gris);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all .18s;
+  min-width: 78px;
+  user-select: none;
+}
+.u:hover { border-color: var(--arena); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(63,41,25,.1); }
+.u.sel { border-color: var(--cafe) !important; box-shadow: 0 0 0 2px var(--cafe) !important; }
+.u.ph { min-width: 115px; }
+.uid { font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--cafe); }
+.um2 { font-size: 9px; color: rgba(63,41,25,.45); margin-top: 1px; }
+.upx { font-size: 10px; font-weight: 600; color: var(--bosque); margin-top: 4px; }
+.u.d { border-color: rgba(42,106,64,.25); background: rgba(232,245,238,.5); }
+.u.d .uid { color: var(--dis); }
+.u.c { border-color: rgba(26,82,148,.25); background: rgba(232,239,248,.5); }
+.u.c .uid { color: var(--cot); }
+.u.r { border-color: rgba(122,85,0,.25); background: rgba(255,243,212,.5); }
+.u.r .uid { color: var(--res); }
+.u.v { border-color: rgba(139,32,32,.25); background: rgba(250,234,234,.5); }
+.u.v .uid { color: var(--ven); opacity:.7; }
+@keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.04)} 100%{transform:scale(1)} }
+.u.pp { animation: pop .26s ease; }
+
+/* Sidebar */
+#sidebar {
+  background: var(--blanco);
+  border-left: 1px solid var(--gris);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+#sem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 20px;
+  color: rgba(63,41,25,.35);
+}
+#sem .sem-ico { font-size: 36px; margin-bottom: 12px; opacity: .4; }
+#sem p { font-size: 12px; line-height: 1.6; }
+#su { display: none; flex-direction: column; flex: 1; overflow-y: auto; }
+#su.on { display: flex; }
+.su-header {
+  background: var(--cafe);
+  color: var(--crema);
+  padding: 16px 18px;
+  flex-shrink: 0;
+}
+.su-id {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--claro);
+  line-height: 1;
+}
+.su-tipo { font-size: 11px; opacity: .6; margin-top: 3px; }
+.su-m2 { font-size: 13px; font-weight: 600; color: #fff; margin-top: 6px; }
+.su-body { padding: 14px 18px; display: flex; flex-direction: column; gap: 14px; }
+.su-price-card {
+  background: var(--crema);
+  border: 1px solid var(--gris);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.su-price-card .pc-lbl {
+  font-size: 9px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: rgba(63,41,25,.45); margin-bottom: 4px;
+}
+.su-price-card .pc-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 600; color: var(--cafe);
+}
+.su-price-card .pc-sub { font-size: 10px; color: rgba(63,41,25,.4); margin-top: 2px; }
+.su-notes-lbl {
+  font-size: 10px; font-weight: 600; letter-spacing: .07em;
+  text-transform: uppercase; color: rgba(63,41,25,.4); margin-bottom: 5px;
+}
+.su-status { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sb {
+  padding: 7px 4px;
+  border: 1.5px solid transparent;
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; text-align: center; transition: all .18s;
+}
+.sb.d { border-color: var(--dis); color: var(--dis); background: transparent; }
+.sb.d.on { background: var(--dis); color: #fff; }
+.sb.c { border-color: var(--cot); color: var(--cot); background: transparent; }
+.sb.c.on { background: var(--cot); color: #fff; }
+.sb.r { border-color: var(--res); color: var(--res); background: transparent; }
+.sb.r.on { background: var(--res); color: #fff; }
+.sb.v { border-color: var(--ven); color: var(--ven); background: transparent; }
+.sb.v.on { background: var(--ven); color: #fff; }
+#snotes {
+  width: 100%;
+  height: 68px;
+  border: 1.5px solid var(--gris);
+  border-radius: 7px;
+  background: var(--blanco);
+  padding: 8px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--texto);
+  resize: none;
+  outline: none;
+  transition: border-color .18s;
+}
+#snotes:focus { border-color: var(--arena); }
+.btn-calc {
+  background: var(--bosque);
+  color: var(--crema);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-calc:hover { background: var(--cafe); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(63,41,25,.2); }
+
+/* Comparativa etapas sidebar */
+.etapas-compare { border: 1px solid var(--gris); border-radius: 8px; overflow: hidden; }
+.ec-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--gris);
+  font-size: 11px;
+  align-items: center;
+}
+.ec-row:last-child { border-bottom: none; }
+.ec-row.cur { background: var(--crema); }
+.ec-row.cur .ec-lbl { font-weight: 600; color: var(--cafe); }
+.ec-lbl { color: rgba(63,41,25,.55); }
+.ec-val { font-weight: 600; color: var(--cafe); }
+.ec-diff { font-size: 10px; color: var(--dis); margin-left: 4px; }
+.disclaimer { font-size: 9px; color: rgba(63,41,25,.3); line-height: 1.5; }
+
+/* ═══════════════════════════════════════════════
+   PAGE CALCULADORA — pantalla completa sin grid
+═══════════════════════════════════════════════ */
+#pgC {
+  display: none;
+  padding-top: 52px;
+  min-height: 100vh;
+  background: var(--crema);
+}
+#pgC.on { display: block; }
+
+#calc-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 24px 48px;
+}
+
+/* Banner de unidad */
+#bn {
+  display: none;
+  background: var(--bosque);
+  color: var(--crema);
+  border-radius: 10px;
+  padding: 12px 18px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+#bn.on { display: flex; }
+#bnu { font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--claro); }
+
+/* Secciones de la calc */
+.calc-section {
+  background: var(--blanco);
+  border: 1px solid var(--gris);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.cs-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(63,41,25,.4);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cs-title::after { content:''; flex:1; height:1px; background: var(--gris); }
+
+/* Selectores de tipo */
+.tipo-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.tipo-btn {
+  padding: 7px 14px;
+  border: 1.5px solid var(--gris);
+  background: transparent;
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; font-weight: 500;
+  cursor: pointer; color: rgba(63,41,25,.65);
+  transition: all .18s;
+}
+.tipo-btn:hover { border-color: var(--arena); }
+.tipo-btn.on { background: var(--cafe); border-color: var(--cafe); color: var(--crema); font-weight: 600; }
+
+/* Unit selector buttons */
+.u-btn {
+  padding: 8px 14px;
+  border: 1.5px solid var(--gris);
+  background: transparent;
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; font-weight: 500;
+  cursor: pointer; color: rgba(63,41,25,.65);
+  transition: all .18s;
+  text-align: left;
+  line-height: 1.4;
+}
+.u-btn:hover { border-color: var(--arena); }
+.u-btn.on { background: var(--cafe); border-color: var(--cafe); color: var(--crema); font-weight: 600; }
+.u-btn .ub-name { font-weight: 600; }
+.u-btn .ub-detail { font-size: 10px; opacity: .7; }
+.u-btn .ub-status { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.u-btn .ub-status.sd { background: var(--dis); }
+.u-btn .ub-status.sc { background: var(--cot); }
+.u-btn .ub-status.sr { background: var(--res); }
+.u-btn .ub-status.sv { background: var(--ven); }
+
+.pm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gris);
+}
+.pm-row label { font-size: 12px; color: rgba(63,41,25,.5); }
+#pmInput {
+  width: 110px;
+  border: 1.5px solid var(--gris);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--cafe);
+  outline: none;
+  background: var(--crema);
+  transition: border-color .18s;
+}
+#pmInput:focus { border-color: var(--arena); }
+.pm-row span { font-size: 10px; color: rgba(63,41,25,.35); }
+
+/* Unidad info */
+.unidad-info {
+  display: none;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--crema);
+  border: 1px solid var(--gris);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--texto);
+  line-height: 1.7;
+}
+.unidad-info.on { display: block; }
+.unidad-info .ui-lbl { color: rgba(63,41,25,.5); }
+.unidad-info .ui-val { font-weight: 600; color: var(--cafe); }
+
+/* Nivel y etapa en una fila */
+.nv-et-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.nv-btns, .et-btns { display: flex; flex-wrap: wrap; gap: 7px; }
+.nvb, .etb {
+  padding: 6px 12px;
+  border: 1.5px solid var(--gris);
+  background: transparent;
+  border-radius: 5px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  color: rgba(63,41,25,.6);
+  transition: all .15s;
+}
+.nvb.on, .etb.on { background: var(--bosque); border-color: var(--bosque); color: var(--crema); font-weight: 600; }
+
+/* Resultado principal */
+.resultado-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.precio-hero {
+  background: var(--cafe);
+  border-radius: 12px;
+  padding: 22px 24px;
+  color: var(--crema);
+}
+.ph-etlbl {
+  font-size: 10px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--claro); margin-bottom: 4px;
+}
+.ph-sublbl { font-size: 11px; opacity: .55; margin-bottom: 8px; }
+.ph-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px; font-weight: 600;
+  color: #fff; line-height: 1;
+}
+.ph-factor { font-size: 10px; opacity: .4; margin-top: 8px; }
+
+/* ROI solo precio total */
+.roi-box {
+  background: var(--crema);
+  border: 1.5px solid var(--gris);
+  border-radius: 12px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.roi-box .rb-lbl { font-size: 10px; color: rgba(63,41,25,.5); margin-bottom: 6px; }
+.roi-box .rb-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px; font-weight: 600;
+  color: var(--bosque); line-height: 1;
+}
+.roi-box .rb-sub { font-size: 10px; color: rgba(63,41,25,.4); margin-top: 6px; }
+
+/* Tabla comparativa por etapa */
+.cmp-table { width: 100%; border-collapse: collapse; }
+.cmp-table th {
+  font-size: 9px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: rgba(63,41,25,.4);
+  padding: 6px 12px; border-bottom: 1px solid var(--gris); text-align: left;
+}
+.cmp-table td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid var(--gris); color: var(--texto); }
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table tr.cur td { background: var(--crema); font-weight: 600; }
+.cmp-table .diff { font-size: 10px; color: var(--dis); }
+.cmp-table .passed { color: rgba(63,41,25,.3); font-style: italic; }
+
+/* Esquema de pago */
+.pago-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.slider-block { }
+.sl-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; }
+.sl-lbl { color: rgba(63,41,25,.55); }
+.sl-val { font-weight: 600; color: var(--cafe); }
+input[type=range] { width: 100%; accent-color: var(--cafe); cursor: pointer; }
+.pay-items { display: flex; flex-direction: column; gap: 0; }
+.pay-row-item {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 9px 0; border-bottom: 1px solid var(--gris); font-size: 12px;
+}
+.pay-row-item:last-child { border-bottom: none; }
+.pay-lbl { color: rgba(63,41,25,.55); }
+.pay-val { font-weight: 600; color: var(--cafe); }
+.pay-val.big { font-size: 16px; font-family: 'Cormorant Garamond', serif; }
+
+.calc-disclaimer {
+  font-size: 9px; color: rgba(63,41,25,.3);
+  line-height: 1.6; text-align: center; padding: 4px 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+
+/* ═══════════════════════════════════════════════
+   PAGE RESUMEN — One-pager ejecutivo
+═══════════════════════════════════════════════ */
+#pgR.on { display: block; }
+
+#resumen-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 24px 48px;
+}
+
+/* Empty state */
+#res-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: rgba(63,41,25,.4);
+}
+#res-empty .res-empty-ico { font-size: 48px; margin-bottom: 16px; opacity: .4; }
+#res-empty p { font-size: 14px; line-height: 1.7; max-width: 360px; margin: 0 auto; }
+
+#res-content { display: none; }
+#res-content.on { display: block; }
+
+/* Header */
+.res-header {
+  text-align: center;
+  padding: 28px 20px 24px;
+  border-bottom: 2px solid var(--cafe);
+  margin-bottom: 24px;
+}
+.res-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: .15em;
+  color: var(--cafe);
+}
+.res-subtitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--arena);
+  margin-top: 4px;
+}
+.res-date {
+  font-size: 11px;
+  color: rgba(63,41,25,.4);
+  margin-top: 10px;
+}
+
+/* Prospecto */
+.res-prospecto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--blanco);
+  border: 1.5px solid var(--gris);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.res-prospecto-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--arena);
+  white-space: nowrap;
+}
+.res-prospecto-input {
+  flex: 1;
+  border: none;
+  border-bottom: 1.5px solid var(--gris);
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--cafe);
+  padding: 4px 2px;
+  outline: none;
+  transition: border-color .2s;
+}
+.res-prospecto-input:focus {
+  border-bottom-color: var(--arena);
+}
+.res-prospecto-input::placeholder {
+  color: rgba(63,41,25,.25);
+  font-weight: 400;
+}
+
+/* Unit card */
+.res-unit-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1.5px solid var(--gris);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.res-uc-left {
+  background: var(--cafe);
+  color: var(--crema);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.res-uc-clave {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1;
+}
+.res-uc-tipo {
+  font-size: 12px;
+  color: var(--claro);
+  margin-top: 6px;
+}
+.res-uc-right { padding: 16px 22px; }
+.res-uc-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gris);
+  font-size: 12px;
+}
+.res-uc-row:last-child { border-bottom: none; }
+.res-uc-lbl { color: rgba(63,41,25,.5); }
+.res-uc-val { font-weight: 600; color: var(--cafe); }
+
+/* Precio section */
+.res-precio-section {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.res-precio-hero {
+  background: var(--bosque);
+  border-radius: 12px;
+  padding: 24px 28px;
+  color: var(--crema);
+}
+.res-ph-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--claro);
+  margin-bottom: 6px;
+}
+.res-ph-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 44px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1;
+}
+.res-ph-pm {
+  font-size: 11px;
+  color: rgba(245,240,234,.5);
+  margin-top: 8px;
+}
+.res-plusvalia {
+  background: var(--crema);
+  border: 1.5px solid var(--gris);
+  border-radius: 12px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.res-pv-lbl { font-size: 11px; color: rgba(63,41,25,.5); margin-bottom: 6px; }
+.res-pv-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px;
+  font-weight: 600;
+  color: var(--bosque);
+  line-height: 1;
+}
+.res-pv-sub { font-size: 10px; color: rgba(63,41,25,.4); margin-top: 6px; }
+
+/* Section */
+.res-section {
+  background: var(--blanco);
+  border: 1px solid var(--gris);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.res-section-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(63,41,25,.4);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gris);
+}
+
+/* Pago grid */
+.res-pago-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.res-pago-item {
+  background: var(--crema);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.res-pi-lbl { font-size: 10px; color: rgba(63,41,25,.5); margin-bottom: 6px; }
+.res-pi-val { font-size: 16px; font-weight: 600; color: var(--cafe); }
+.res-pi-val.big {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  color: var(--bosque);
+}
+.res-pago-highlight {
+  background: rgba(42,106,64,.08);
+  border: 1px solid rgba(42,106,64,.15);
+}
+
+/* Table */
+.res-table { width: 100%; border-collapse: collapse; }
+.res-table th {
+  font-size: 9px; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: rgba(63,41,25,.4);
+  padding: 6px 12px; border-bottom: 1px solid var(--gris); text-align: left;
+}
+.res-table td {
+  padding: 10px 12px; font-size: 13px;
+  border-bottom: 1px solid var(--gris); color: var(--texto);
+}
+.res-table tr:last-child td { border-bottom: none; }
+.res-table tr.cur td { background: var(--crema); font-weight: 600; }
+.res-table .diff { font-size: 11px; color: var(--dis); font-weight: 600; }
+.res-table .passed { color: rgba(63,41,25,.3); font-style: italic; }
+
+/* Footer */
+.res-footer {
+  text-align: center;
+  padding: 20px 0;
+  border-top: 2px solid var(--cafe);
+  margin-top: 8px;
+}
+.res-footer-line {
+  font-size: 10px;
+  color: rgba(63,41,25,.4);
+  line-height: 1.8;
+}
+
+/* Actions */
+.res-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* ═══════════════════════════════════════════════
+   PAGE COMPARADOR
+═══════════════════════════════════════════════ */
+#pgX.on { display: block; }
+#cmp-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px 24px 48px;
+}
+.cmp-header {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--cafe);
+  margin-bottom: 4px;
+}
+.cmp-sub {
+  font-size: 12px;
+  color: rgba(63,41,25,.4);
+  margin-bottom: 20px;
+}
+
+/* Selected chips */
+.cmp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  min-height: 38px;
+  align-items: center;
+}
+.cmp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--cafe);
+  color: var(--crema);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  animation: popIn .2s ease;
+}
+.cmp-chip .cc-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.cmp-chip .cc-dot.sd { background: var(--dis); }
+.cmp-chip .cc-dot.sc { background: var(--cot); }
+.cmp-chip .cc-dot.sr { background: var(--res); }
+.cmp-chip .cc-dot.sv { background: var(--ven); }
+.cmp-chip .cc-x {
+  margin-left: 4px;
+  cursor: pointer;
+  opacity: .6;
+  font-size: 14px;
+  line-height: 1;
+}
+.cmp-chip .cc-x:hover { opacity: 1; }
+.cmp-empty-hint {
+  font-size: 12px;
+  color: rgba(63,41,25,.3);
+  font-style: italic;
+}
+
+/* Unit grid */
+.cmp-ugrid-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--arena);
+  margin-bottom: 8px;
+}
+.cmp-ugrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.cmp-ubtn {
+  padding: 5px 10px;
+  border: 1.5px solid var(--gris);
+  background: var(--blanco);
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  color: rgba(63,41,25,.65);
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.cmp-ubtn:hover { border-color: var(--arena); }
+.cmp-ubtn.on {
+  background: var(--cafe);
+  border-color: var(--cafe);
+  color: var(--crema);
+  font-weight: 600;
+}
+.cmp-ubtn.full:not(.on) {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.cmp-ubtn .cu-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cmp-ubtn .cu-dot.sd { background: var(--dis); }
+.cmp-ubtn .cu-dot.sc { background: var(--cot); }
+.cmp-ubtn .cu-dot.sr { background: var(--res); }
+.cmp-ubtn .cu-dot.sv { background: var(--ven); }
+
+/* Controls row */
+.cmp-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--blanco);
+  border: 1.5px solid var(--gris);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.cmp-ctrl-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(63,41,25,.45);
+  margin-bottom: 6px;
+}
+.cmp-ctrl-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cafe);
+  margin-bottom: 6px;
+}
+.cmp-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--arena);
+}
+.cmp-et-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+.cmp-etb {
+  padding: 5px 10px;
+  border: 1.5px solid var(--gris);
+  background: transparent;
+  border-radius: 5px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  color: rgba(63,41,25,.6);
+  transition: all .15s;
+}
+.cmp-etb.on { background: var(--bosque); border-color: var(--bosque); color: var(--crema); font-weight: 600; }
+
+/* Comparison table */
+.cmp-result-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(63,41,25,.25);
+  font-size: 14px;
+}
+.cmp-result-empty .cre-ico { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+.cmp-tbl-wrap {
+  overflow-x: auto;
+  border: 1.5px solid var(--gris);
+  border-radius: 12px;
+  background: var(--blanco);
+}
+.cmp-tbl {
+  width: 100%;
+  border-collapse: collapse;
+}
+.cmp-tbl th {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(63,41,25,.4);
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1.5px solid var(--gris);
+  white-space: nowrap;
+}
+.cmp-tbl th.col-unit {
+  background: var(--cafe);
+  color: var(--crema);
+  font-size: 12px;
+  letter-spacing: .02em;
+  text-transform: none;
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 2px solid var(--arena);
+}
+.cmp-tbl td {
+  padding: 10px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(63,41,25,.06);
+  color: var(--texto);
+}
+.cmp-tbl tr:last-child td { border-bottom: none; }
+.cmp-tbl td.lbl-cell {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(63,41,25,.5);
+  white-space: nowrap;
+  background: rgba(63,41,25,.02);
+  width: 140px;
+}
+.cmp-tbl td.val-cell {
+  text-align: center;
+  font-weight: 500;
+}
+.cmp-tbl td.val-cell.hero {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--cafe);
+}
+.cmp-tbl td.val-cell .pv-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--dis-bg);
+  color: var(--dis);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════
+   PRINT — Solo Resumen
+═══════════════════════════════════════════════ */
+@media print {
+  #topbar, .no-print { display: none !important; }
+  body { background: white !important; }
+  #pgR { display: block !important; padding-top: 0 !important; }
+  #pgM, #pgC, #pgX { display: none !important; }
+  #resumen-wrap { padding: 0; max-width: 100%; }
+  .res-header { padding-top: 10px; }
+  .res-prospecto-input { border-bottom: none; font-weight: 600; }
+  .res-unit-card, .res-precio-section, .res-section { break-inside: avoid; }
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gris); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--claro); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo"><span>HONOS</span> · Sistema de Ventas</div>
+  <div class="tab-nav">
+    <button class="tab-btn on" id="tabM" onclick="sv('M')">Mapa</button>
+    <button class="tab-btn" id="tabC" onclick="sv('C')">Calculadora</button>
+    <button class="tab-btn" id="tabR" onclick="sv('R')">Resumen</button>
+    <button class="tab-btn" id="tabX" onclick="sv('X')">Comparador</button>
+  </div>
+  <div class="top-right">
+    <div class="etapa-badge">
+      <div class="etapa-dot"></div>
+      <span id="etapa-active-lbl">E1 · Preventa</span>
+    </div>
+    <div class="save-info">
+      <div id="saveDot"></div>
+      <span id="saveLabel">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ PÁGINA MAPA ══════ -->
+<div id="pgM" class="on">
+  <!-- Mapa col -->
+  <div id="mapa-col">
+    <div id="statsbar">
+      <div class="stat-item d"><div class="stat-num" id="cntD">0</div><div class="stat-lbl">Disponibles</div></div>
+      <div class="stat-item c"><div class="stat-num" id="cntC">0</div><div class="stat-lbl">En Cotización</div></div>
+      <div class="stat-item r"><div class="stat-num" id="cntR">0</div><div class="stat-lbl">Reservados</div></div>
+      <div class="stat-item v"><div class="stat-num" id="cntV">0</div><div class="stat-lbl">Vendidos</div></div>
+    </div>
+    <div id="etapa-bar">
+      <span class="eb-lbl">Etapa activa:</span>
+      <button class="eb-btn on" id="eb0" onclick="setEtapaGlobal(0)">E1 · Preventa</button>
+      <button class="eb-btn" id="eb1" onclick="setEtapaGlobal(1)">E2 · Lanzamiento</button>
+      <button class="eb-btn" id="eb2" onclick="setEtapaGlobal(2)">E3 · Construcción</button>
+      <button class="eb-btn" id="eb3" onclick="setEtapaGlobal(3)">E4 · Cierre</button>
+      <span class="eb-precio" id="eb-factor-lbl">Factor: 1.000×</span>
+    </div>
+    <div id="grid-wrap">
+      <div id="grid"></div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div id="sem">
+      <div class="sem-ico">🏢</div>
+      <p>Selecciona una unidad en el mapa para ver detalles, cambiar estatus o calcular la inversión.</p>
+    </div>
+    <div id="su">
+      <div class="su-header">
+        <div class="su-id" id="sui">—</div>
+        <div class="su-tipo" id="sut">—</div>
+        <div class="su-m2" id="sum">—</div>
+      </div>
+      <div class="su-body">
+        <div class="su-price-card">
+          <div class="pc-lbl">Precio E1 · Preventa</div>
+          <div class="pc-val" id="spv">—</div>
+          <div class="pc-sub" id="spm">—</div>
+        </div>
+        <div>
+          <div class="su-notes-lbl">Estatus</div>
+          <div class="su-status">
+            <button class="sb d on" onclick="setSt('d')">Disponible</button>
+            <button class="sb c" onclick="setSt('c')">En Cotización</button>
+            <button class="sb r" onclick="setSt('r')">Reservado</button>
+            <button class="sb v" onclick="setSt('v')">Vendido</button>
+          </div>
+        </div>
+        <div>
+          <div class="su-notes-lbl">Precios por Etapa</div>
+          <div class="etapas-compare" id="sideEtapas"></div>
+        </div>
+        <div>
+          <div class="su-notes-lbl">Notas del cliente</div>
+          <textarea id="snotes" placeholder="Nombre, teléfono, observaciones..."></textarea>
+        </div>
+        <button class="btn-calc" onclick="goCalc()">📊 Calculadora de Inversión</button>
+        <div class="disclaimer">Precios referenciales · H+D Inversiones · Información confidencial</div>
+      </div>
+    </div>
+  </div>
+</div><!-- /pgM -->
+
+<!-- ══════ PÁGINA CALCULADORA ══════ -->
+<div id="pgC">
+  <div id="calc-wrap">
+
+    <!-- Banner unidad seleccionada desde mapa -->
+    <div id="bn">
+      <span>📌 Calculando:</span>
+      <span id="bnu">—</span>
+    </div>
+
+    <!-- TIPO DE UNIDAD -->
+    <div class="calc-section">
+      <div class="cs-title">Tipo de Unidad</div>
+      <div class="tipo-btns" id="tiposBtns"></div>
+      <div class="pm-row">
+        <label>Precio por m²:</label>
+        <input type="number" id="pmInput" value="75000" step="500">
+        <span>MXN — editable</span>
+      </div>
+    </div>
+
+    <!-- UNIDAD ESPECÍFICA -->
+    <div class="calc-section" id="unidadSection">
+      <div class="cs-title">Unidad Específica</div>
+      <div class="tipo-btns" id="unidadBtns"></div>
+      <div class="unidad-info" id="unidadInfo"></div>
+    </div>
+
+    <!-- NIVEL Y ETAPA -->
+    <div class="nv-et-row">
+      <div class="calc-section" style="margin-bottom:0">
+        <div class="cs-title">Nivel del inmueble</div>
+        <div class="nv-btns" id="nvBtns"></div>
+      </div>
+      <div class="calc-section" style="margin-bottom:0">
+        <div class="cs-title">Etapa de precio</div>
+        <div class="et-btns" id="etBtns"></div>
+      </div>
+    </div>
+
+    <!-- RESULTADO PRECIO + ROI -->
+    <div class="resultado-row">
+      <div class="precio-hero">
+        <div class="ph-etlbl" id="payEtLbl">—</div>
+        <div class="ph-sublbl">Precio total de lista</div>
+        <div class="ph-price" id="payTotal">—</div>
+        <div class="ph-factor" id="eFac">—</div>
+      </div>
+      <div class="roi-box">
+        <div class="rb-lbl" id="roiLbl">Plusvalía E1 → E4</div>
+        <div class="rb-val" id="projRoiT">—</div>
+        <div class="rb-sub">sobre el precio total de la inversión</div>
+      </div>
+    </div>
+
+    <!-- COMPARATIVA ETAPAS -->
+    <div class="calc-section">
+      <div class="cs-title">Comparativa por Etapa de Precio</div>
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>Etapa</th>
+            <th>Precio total</th>
+            <th>vs etapa actual</th>
+          </tr>
+        </thead>
+        <tbody id="cmpBody"></tbody>
+      </table>
+    </div>
+
+    <!-- ESQUEMA DE PAGO -->
+    <div class="calc-section">
+      <div class="cs-title">Esquema de Pago</div>
+      <div class="pago-row">
+        <div class="slider-block">
+          <div class="sl-header">
+            <span class="sl-lbl" id="payEngLbl">Enganche (30%)</span>
+            <span class="sl-val" id="engLabel">30%</span>
+          </div>
+          <input type="range" id="engRange" min="10" max="50" value="30">
+          <div class="sl-header" style="margin-top:16px">
+            <span class="sl-lbl">Plazo mensualidades</span>
+            <span class="sl-val" id="plzLabel">24 meses</span>
+          </div>
+          <input type="range" id="plzRange" min="6" max="42" value="24" step="6">
+        </div>
+        <div class="pay-items">
+          <div class="pay-row-item">
+            <span class="pay-lbl" id="payEngLbl2">Enganche (30%)</span>
+            <span class="pay-val big" id="payEngVal">—</span>
+          </div>
+          <div class="pay-row-item">
+            <span class="pay-lbl">Saldo durante obra</span>
+            <span class="pay-val" id="paySaldo">—</span>
+          </div>
+          <div class="pay-row-item">
+            <span class="pay-lbl" id="mMensLbl">Mensualidad (24 meses)</span>
+            <span class="pay-val big" id="payMens">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="calc-disclaimer">
+      Precios referenciales sujetos a ajuste por avance de ventas. Precio E1 vigente durante preventa exclusiva.
+      H+D Inversiones y Construcciones SA de CV · Pozas Arquitectos · Blvd. Puerta del Sol 219 · Monterrey, NL.
+    </div>
+
+    <div style="text-align:center;padding:8px 0 0">
+      <button class="btn-calc" onclick="sv('R')" style="display:inline-flex;background:var(--cafe);font-size:13px;padding:14px 28px">
+        📋 Generar Resumen Ejecutivo
+      </button>
+    </div>
+  </div>
+</div><!-- /pgC -->
+
+<!-- ══════ PÁGINA RESUMEN / ONE-PAGER ══════ -->
+<div id="pgR" class="page">
+  <div id="resumen-wrap">
+
+    <!-- Empty state -->
+    <div id="res-empty">
+      <div class="res-empty-ico">📋</div>
+      <p>Selecciona una unidad en la <strong>Calculadora</strong> y ajusta el esquema de pago para generar el resumen ejecutivo.</p>
+      <button class="btn-calc" onclick="sv('C')" style="margin-top:16px;display:inline-flex">Ir a Calculadora</button>
+    </div>
+
+    <!-- One-pager content (hidden until generated) -->
+    <div id="res-content">
+
+      <!-- Header -->
+      <div class="res-header">
+        <div class="res-logo">H O N O S</div>
+        <div class="res-subtitle">Resumen Ejecutivo de Inversión</div>
+        <div class="res-date" id="resDate">—</div>
+      </div>
+
+      <!-- Prospecto -->
+      <div class="res-prospecto">
+        <span class="res-prospecto-lbl">Preparado para</span>
+        <input type="text" class="res-prospecto-input" id="resProspecto" placeholder="Nombre del prospecto">
+      </div>
+
+      <!-- Unit card -->
+        <div class="res-uc-left">
+          <div class="res-uc-clave" id="resClave">—</div>
+          <div class="res-uc-tipo" id="resTipo">—</div>
+        </div>
+        <div class="res-uc-right">
+          <div class="res-uc-row"><span class="res-uc-lbl">Superficie</span><span class="res-uc-val" id="resM2">—</span></div>
+          <div class="res-uc-row"><span class="res-uc-lbl">Nivel</span><span class="res-uc-val" id="resNivel">—</span></div>
+          <div class="res-uc-row"><span class="res-uc-lbl">Cajones</span><span class="res-uc-val" id="resCajones">—</span></div>
+
+        </div>
+      </div>
+
+      <!-- Precio principal -->
+      <div class="res-precio-section">
+        <div class="res-precio-hero">
+          <div class="res-ph-lbl" id="resEtapaLbl">—</div>
+          <div class="res-ph-price" id="resPrecio">—</div>
+          <div class="res-ph-pm" id="resPM">—</div>
+        </div>
+        <div class="res-plusvalia">
+          <div class="res-pv-lbl" id="resPVLbl">Plusvalía E1 → E4</div>
+          <div class="res-pv-val" id="resPV">—</div>
+          <div class="res-pv-sub">sobre precio total</div>
+        </div>
+      </div>
+
+      <!-- Esquema de pago -->
+      <div class="res-section">
+        <div class="res-section-title">Esquema de Pago</div>
+        <div class="res-pago-grid">
+          <div class="res-pago-item">
+            <div class="res-pi-lbl" id="resEngLbl">Enganche (30%)</div>
+            <div class="res-pi-val" id="resEngVal">—</div>
+          </div>
+          <div class="res-pago-item">
+            <div class="res-pi-lbl">Saldo durante obra</div>
+            <div class="res-pi-val" id="resSaldo">—</div>
+          </div>
+          <div class="res-pago-item res-pago-highlight">
+            <div class="res-pi-lbl" id="resMensLbl">Mensualidad (24 meses)</div>
+            <div class="res-pi-val big" id="resMens">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparativa etapas -->
+      <div class="res-section">
+        <div class="res-section-title">Comparativa por Etapa</div>
+        <table class="res-table">
+          <thead>
+            <tr><th>Etapa</th><th>Precio</th><th>Diferencia</th></tr>
+          </thead>
+          <tbody id="resCmpBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div class="res-footer">
+        <div class="res-footer-line">Precios referenciales sujetos a ajuste por avance de ventas.</div>
+        <div class="res-footer-line"><strong>H+D Inversiones y Construcciones SA de CV</strong> · Pozas Arquitectos</div>
+        <div class="res-footer-line">Blvd. Puerta del Sol 219, Col. San Jerónimo · Monterrey, NL</div>
+        <div class="res-footer-line"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e68e898a87a68e89888995c88b9e">[email&#160;protected]</a> · 811 555 7252</div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="res-actions no-print">
+        <button class="btn-calc" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+        <button class="btn-calc" onclick="sv('C')" style="background:var(--arena)">← Ajustar en Calculadora</button>
+      </div>
+
+    </div><!-- /res-content -->
+  </div>
+</div><!-- /pgR -->
+
+<!-- ══════ PÁGINA COMPARADOR ══════ -->
+<div id="pgX" class="page">
+  <div id="cmp-wrap">
+
+    <div class="cmp-header">Comparador de Unidades</div>
+    <div class="cmp-sub">Selecciona hasta 3 unidades para comparar lado a lado</div>
+
+    <!-- Chips seleccionados -->
+    <div class="cmp-chips" id="cmpChips">
+      <span class="cmp-empty-hint" id="cmpHint">← Selecciona unidades abajo</span>
+    </div>
+
+    <!-- Grid de unidades agrupado -->
+    <div id="cmpUnitGrid"></div>
+
+    <!-- Controles: etapa + enganche + plazo -->
+    <div class="cmp-controls">
+      <div>
+        <div class="cmp-ctrl-lbl">Etapa de precio</div>
+        <div class="cmp-et-btns" id="cmpEtBtns"></div>
+      </div>
+      <div>
+        <div class="cmp-ctrl-lbl">Enganche</div>
+        <div class="cmp-ctrl-val" id="cmpEngLbl">30%</div>
+        <input type="range" id="cmpEngRange" min="10" max="50" value="30">
+      </div>
+      <div>
+        <div class="cmp-ctrl-lbl">Plazo mensualidades</div>
+        <div class="cmp-ctrl-val" id="cmpPlzLbl">24 meses</div>
+        <input type="range" id="cmpPlzRange" min="6" max="42" value="24" step="6">
+      </div>
+    </div>
+
+    <!-- Tabla comparativa -->
+    <div id="cmpResult">
+      <div class="cmp-result-empty" id="cmpEmpty">
+        <div class="cre-ico">⚖️</div>
+        <p>Selecciona al menos una unidad para ver la comparativa</p>
+      </div>
+      <div class="cmp-tbl-wrap" id="cmpTblWrap" style="display:none">
+        <table class="cmp-tbl" id="cmpTbl"></table>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /pgX -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ════════════════════════════════════════════
+   DATOS
+════════════════════════════════════════════ */
+var TIPOS = [
+  {id:"A1", lb:"A1",      m2:127.01, ds:"2 Recámaras",  cj:2, tp:"d", pm:75000},
+  {id:"A2", lb:"A2",      m2:130.29, ds:"2 Recámaras",  cj:2, tp:"d", pm:75000},
+  {id:"B",  lb:"B",       m2:183.81, ds:"3 Recámaras",  cj:2, tp:"d", pm:75000},
+  {id:"PH", lb:"PH",      m2:337.00, ds:"Penthouse 3R", cj:3, tp:"p", pm:75000},
+  {id:"OF", lb:"Oficina", m2:170.00, ds:"Oficina",      cj:5, tp:"o", pm:45000},
+  {id:"LC", lb:"Local",   m2:47.00,  ds:"Local PB",     cj:3, tp:"l", pm:75000}
+];
+
+var U2T = {
+  "PH1":"PH","PH2":"PH",
+  "8B1":"B","8B2":"B","8A1":"A1","8A2":"A2",
+  "7B1":"B","7B2":"B","7A1":"A1","7A2":"A2",
+  "6B1":"B","6B2":"B","6A1":"A1","6A2":"A2",
+  "5B1":"B","5B2":"B","5A1":"A1","5A2":"A2",
+  "4B1":"B","4B2":"B","4A1":"A1","4A2":"A2",
+  "OF1":"OF","OF2":"OF","OF3":"OF","OF4":"OF","OF5":"OF",
+  "LC1":"LC","LC2":"LC","LC3":"LC","LC4":"LC"
+};
+
+var UN = {
+  "PH1":9,"PH2":9,
+  "8B1":8,"8A1":8,"8A2":8,"8B2":8,
+  "7B1":7,"7A1":7,"7A2":7,"7B2":7,
+  "6B1":6,"6A1":6,"6A2":6,"6B2":6,
+  "5B1":5,"5A1":5,"5A2":5,"5B2":5,
+  "4B1":4,"4A1":4,"4A2":4,"4B2":4,
+  "OF1":2,"OF2":2,"OF3":2,"OF4":3,"OF5":3,
+  "LC1":"PB","LC2":"PB","LC3":"PB","LC4":"PB"
+};
+
+var UDATOS = {
+  "PH1":{m2:334.65,cj:3,pm:75000},
+  "PH2":{m2:339.50,cj:3,pm:75000},
+  "8B1":{m2:183.81,cj:2,pm:75000},"8B2":{m2:183.81,cj:2,pm:75000},
+  "7B1":{m2:183.81,cj:2,pm:75000},"7B2":{m2:183.81,cj:2,pm:75000},
+  "6B1":{m2:183.81,cj:2,pm:75000},"6B2":{m2:183.81,cj:2,pm:75000},
+  "5B1":{m2:183.81,cj:2,pm:75000},"5B2":{m2:183.81,cj:2,pm:75000},
+  "4B1":{m2:183.81,cj:2,pm:75000},"4B2":{m2:183.81,cj:2,pm:75000},
+  "8A1":{m2:127.01,cj:2,pm:75000},"8A2":{m2:130.29,cj:2,pm:75000},
+  "7A1":{m2:127.01,cj:2,pm:75000},"7A2":{m2:130.29,cj:2,pm:75000},
+  "6A1":{m2:127.01,cj:2,pm:75000},"6A2":{m2:130.29,cj:2,pm:75000},
+  "5A1":{m2:127.01,cj:2,pm:75000},"5A2":{m2:130.29,cj:2,pm:75000},
+  "4A1":{m2:127.01,cj:2,pm:75000},"4A2":{m2:130.29,cj:2,pm:75000},
+  "OF1":{m2:164.96,cj:6,pm:45000},"OF2":{m2:146.40,cj:5,pm:45000},
+  "OF3":{m2:195.76,cj:7,pm:45000},"OF4":{m2:146.40,cj:5,pm:45000},
+  "OF5":{m2:195.76,cj:6,pm:45000},
+  "LC1":{m2:66.56,cj:4,pm:75000},"LC2":{m2:32.20,cj:2,pm:75000},
+  "LC3":{m2:44.62,cj:3,pm:75000},"LC4":{m2:44.59,cj:2,pm:75000}
+};
+
+var NF = {"4":1.000,"5":1.015,"6":1.030,"7":1.045,"8":1.060,"9":1.090,"2":1.000,"3":1.000,"PB":1.000};
+var CAJ_DEPT = 180000;
+var CAJ_PH   = 220000;
+
+var ETP = [
+  {lb:"E1 · Preventa",     sn:"E1", f:1.000},
+  {lb:"E2 · Lanzamiento",  sn:"E2", f:1.055},
+  {lb:"E3 · Construcción", sn:"E3", f:1.110},
+  {lb:"E4 · Cierre",       sn:"E4", f:1.165}
+];
+
+var FLR = [
+  {lb:"NIV 9 · PENTHOUSE",ac:true,ph:true,us:[
+    {id:"PH1",cl:"PH-1",tp:"Penthouse · 3 Rec",m2:"334.65 m²"},
+    {id:"PH2",cl:"PH-2",tp:"Penthouse · 3 Rec",m2:"339.50 m²"}
+  ]},
+  {lb:"NIV 8",ac:false,ph:false,us:[
+    {id:"8B1",cl:"8-B1",tp:"Tipo B · 3 Rec",m2:"183.81 m²"},
+    {id:"8A1",cl:"8-A1",tp:"Tipo A1 · 2 Rec",m2:"127.01 m²"},
+    {id:"8A2",cl:"8-A2",tp:"Tipo A2 · 2 Rec",m2:"130.29 m²"},
+    {id:"8B2",cl:"8-B2",tp:"Tipo B · 3 Rec",m2:"183.81 m²"}
+  ]},
+  {lb:"NIV 7",ac:false,ph:false,us:[
+    {id:"7B1",cl:"7-B1",tp:"Tipo B · 3 Rec",m2:"183.81 m²"},
+    {id:"7A1",cl:"7-A1",tp:"Tipo A1 · 2 Rec",m2:"127.01 m²"},
+    {id:"7A2",cl:"7-A2",tp:"Tipo A2 · 2 Rec",m2:"130.29 m²"},
+    {id:"7B2",cl:"7-B2",tp:"Tipo B · 3 Rec",m2:"183.81 m²"}
+  ]},
+  {lb:"NIV 6",ac:false,ph:false,us:[
+    {id:"6B1",cl:"6-B1",tp:"Tipo B · 3 Rec",m2:"183.81 m²"},
+    {id:"6A1",cl:"6-A1",tp:"Tipo A1 · 2 Rec",m2:"127.01 m²"},
+    {id:"6A2",cl:"6-A2",tp:"Tipo A2 · 2 Rec",m2:"130.29 m²"},
+    {id:"6B2",cl:"6-B2",tp:"Tipo B · 3 Rec",m2:"183.81 m²"}
+  ]},
+  {lb:"NIV 5",ac:false,ph:false,us:[
+    {id:"5B1",cl:"5-B1",tp:"Tipo B · 3 Rec",m2:"183.81 m²"},
+    {id:"5A1",cl:"5-A1",tp:"Tipo A1 · 2 Rec",m2:"127.01 m²"},
+    {id:"5A2",cl:"5-A2",tp:"Tipo A2 · 2 Rec",m2:"130.29 m²"},
+    {id:"5B2",cl:"5-B2",tp:"Tipo B · 3 Rec",m2:"183.81 m²"}
+  ]},
+  {lb:"NIV 4",ac:false,ph:false,us:[
+    {id:"4B1",cl:"4-B1",tp:"Tipo B · 3 Rec",m2:"183.81 m²"},
+    {id:"4A1",cl:"4-A1",tp:"Tipo A1 · 2 Rec",m2:"127.01 m²"},
+    {id:"4A2",cl:"4-A2",tp:"Tipo A2 · 2 Rec",m2:"130.29 m²"},
+    {id:"4B2",cl:"4-B2",tp:"Tipo B · 3 Rec",m2:"183.81 m²"}
+  ]},
+  {lb:"NIV 3 · OFICINAS",ac:true,ph:false,us:[
+    {id:"OF4",cl:"OF-04",tp:"Oficina 04 · Nv3",m2:"146.40 m²"},
+    {id:"OF5",cl:"OF-05",tp:"Oficina 05 · Nv3",m2:"195.76 m²"}
+  ]},
+  {lb:"NIV 2 · OFICINAS",ac:false,ph:false,us:[
+    {id:"OF1",cl:"OF-01",tp:"Oficina 01 · Nv2",m2:"164.96 m²"},
+    {id:"OF2",cl:"OF-02",tp:"Oficina 02 · Nv2",m2:"146.40 m²"},
+    {id:"OF3",cl:"OF-03",tp:"Oficina 03 · Nv2",m2:"195.76 m²"}
+  ]},
+  {lb:"PB · LOCALES",ac:true,ph:false,us:[
+    {id:"LC1",cl:"LC-01",tp:"Local Comercial · PB",m2:"66.56 m²"},
+    {id:"LC2",cl:"LC-02",tp:"Local Comercial · PB",m2:"32.20 m²"},
+    {id:"LC3",cl:"LC-03",tp:"Local Comercial · PB",m2:"44.62 m²"},
+    {id:"LC4",cl:"LC-04",tp:"Local Comercial · PB",m2:"44.59 m²"}
+  ]}
+];
+
+var AU = [];
+FLR.forEach(function(f){ f.us.forEach(function(u){ AU.push(u); }); });
+
+/* ════════════════════════════
+   ESTADO
+════════════════════════════ */
+var MS = {};
+var MN = {};
+AU.forEach(function(u){ MS[u.id]="d"; });
+var selId = null;
+var etapaGlobal = 0;
+
+/* Calculadora */
+/* CT.uid: unidad específica seleccionada (null = modo tipo genérico) */
+var CT = { tid:"A1", nv:4, et:0, pm:75000, en:30, pl:24, uid:null };
+
+/* ════════════════════════════
+   FIREBASE
+════════════════════════════ */
+var FB_URL = "https://honos-1e65e-default-rtdb.firebaseio.com";
+
+function fbRead() {
+  fetch(FB_URL+"/honos/st.json")
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data) Object.keys(data).forEach(function(k){ if(MS[k]!==undefined) MS[k]=data[k]; });
+      return fetch(FB_URL+"/honos/no.json");
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data) MN = Object.assign({}, data);
+      bldG(); upC();
+      document.getElementById("saveLabel").textContent = "Sincronizado";
+      document.getElementById("saveDot").style.background = "#4CAF50";
+    })
+    .catch(function(){ bldG(); upC(); });
+}
+
+function fbWrite() {
+  var dot = document.getElementById("saveDot");
+  var lbl = document.getElementById("saveLabel");
+  dot.style.background = "#FFC107";
+  lbl.textContent = "Guardando...";
+  Promise.all([
+    fetch(FB_URL+"/honos/st.json",{method:"PUT",body:JSON.stringify(MS)}),
+    fetch(FB_URL+"/honos/no.json",{method:"PUT",body:JSON.stringify(MN)})
+  ]).then(function(){
+    dot.style.background="#4CAF50";
+    lbl.textContent="Guardado";
+  }).catch(function(){
+    dot.style.background="#f44336";
+    lbl.textContent="Error sync";
+  });
+}
+
+/* ════════════════════════════
+   FORMATO
+════════════════════════════ */
+function fm(n){ return "$"+Math.round(n).toLocaleString("es-MX"); }
+
+/* ════════════════════════════
+   PRECIOS
+════════════════════════════ */
+function calcPrecio(udid, etIdx) {
+  var d = UDATOS[udid];
+  if(!d) return 0;
+  var nv = UN[udid];
+  var nf = NF[String(nv)] || 1;
+  var tp = U2T[udid];
+  var cajVal = (tp==="PH") ? CAJ_PH : CAJ_DEPT;
+  var base = (tp==="d"||tp==="p") ? d.m2*d.pm*nf : d.m2*d.pm;
+  return (base + d.cj*cajVal) * ETP[etIdx].f;
+}
+
+function calcCalcEt(etIdx) {
+  var t = TIPOS.filter(function(x){ return x.id===CT.tid; })[0];
+  if(!t) return 0;
+  /* Si hay unidad específica seleccionada, usar sus datos exactos */
+  var m2, cj;
+  var isLevelApplicable; /* true = tiene factor de nivel */
+  if(CT.uid && UDATOS[CT.uid]) {
+    m2 = UDATOS[CT.uid].m2;
+    cj = UDATOS[CT.uid].cj;
+    /* Factor nivel aplica solo a departamentos y PH */
+    var rawTp = U2T[CT.uid];
+    isLevelApplicable = (rawTp==="A1"||rawTp==="A2"||rawTp==="B"||rawTp==="PH");
+  } else {
+    m2 = t.m2;
+    cj = t.cj;
+    isLevelApplicable = (t.tp==="d"||t.tp==="p");
+  }
+  var nf = isLevelApplicable ? (NF[String(CT.nv)] || 1) : 1;
+  var cajVal = (CT.tid==="PH") ? CAJ_PH : CAJ_DEPT;
+  var base = m2 * CT.pm * nf;
+  return (base + cj * cajVal) * ETP[etIdx].f;
+}
+function calcCalc() { return calcCalcEt(CT.et); }
+
+/* ════════════════════════════
+   NAVEGACIÓN
+════════════════════════════ */
+window.sv = function(v) {
+  ["M","C","R","X"].forEach(function(x){
+    document.getElementById("pg"+x).classList.toggle("on", x===v);
+    document.getElementById("tab"+x).classList.toggle("on", x===v);
+  });
+  if(v==="C"||v==="R"||v==="X") window.scrollTo(0,0);
+  if(v==="R") buildResumen();
+  if(v==="X") buildCmp();
+};
+
+/* ════════════════════════════
+   ETAPA GLOBAL
+════════════════════════════ */
+window.setEtapaGlobal = function(idx) {
+  etapaGlobal = idx;
+  [0,1,2,3].forEach(function(i){
+    document.getElementById("eb"+i).classList.toggle("on", i===idx);
+  });
+  document.getElementById("eb-factor-lbl").textContent = "Factor: "+ETP[idx].f.toFixed(3)+"×";
+  document.getElementById("etapa-active-lbl").textContent = ETP[idx].sn+" · "+ETP[idx].lb.split("·")[1].trim();
+  bldG();
+  if(selId) selU(selId);
+};
+
+/* ════════════════════════════
+   GRID MAPA
+════════════════════════════ */
+function bldG() {
+  var g = document.getElementById("grid");
+  g.innerHTML = "";
+  FLR.forEach(function(fl){
+    var row = document.createElement("div");
+    row.className = "floor-row";
+    var lb = document.createElement("div");
+    lb.className = "floor-label"+(fl.ac?" ac":"");
+    lb.textContent = fl.lb;
+    row.appendChild(lb);
+    var ur = document.createElement("div");
+    ur.className = "units-row";
+    fl.us.forEach(function(u){
+      var el = document.createElement("div");
+      var st = MS[u.id]||"d";
+      el.className = "u "+st+(fl.ph?" ph":"");
+      el.id = "mu-"+u.id;
+      var p = calcPrecio(u.id, etapaGlobal);
+      var html = '<div class="uid">'+u.cl+'</div>';
+      html += '<div class="um2">'+u.m2+'</div>';
+      if(p) html += '<div class="upx">'+fm(p)+'</div>';
+      el.innerHTML = html;
+      el.onclick = (function(uid){ return function(){ selU(uid); }; })(u.id);
+      if(selId===u.id) el.classList.add("sel");
+      ur.appendChild(el);
+    });
+    row.appendChild(ur);
+    g.appendChild(row);
+  });
+}
+
+/* ════════════════════════════
+   SELECCIONAR UNIDAD
+════════════════════════════ */
+function selU(id) {
+  if(selId){ var p=document.getElementById("mu-"+selId); if(p) p.classList.remove("sel"); }
+  selId = id;
+  var el = document.getElementById("mu-"+id);
+  if(el){ el.classList.add("sel","pp"); setTimeout(function(){ el.classList.remove("pp"); },260); }
+  var u=null; AU.forEach(function(x){ if(x.id===id) u=x; });
+  var d = UDATOS[id];
+  var p = calcPrecio(id, 0);
+  document.getElementById("sem").style.display="none";
+  document.getElementById("su").classList.add("on");
+  document.getElementById("sui").textContent = u.cl;
+  document.getElementById("sut").textContent = u.tp;
+  document.getElementById("sum").textContent = u.m2;
+  document.getElementById("spv").textContent = fm(p);
+  document.getElementById("spm").textContent = "$"+(d?d.pm.toLocaleString("es-MX"):"—")+"/m² · E1";
+  document.querySelectorAll(".sb").forEach(function(b){ b.classList.toggle("on",b.classList.contains(MS[id]||"d")); });
+  document.getElementById("snotes").value = MN[id]||"";
+  /* Comparativa etapas sidebar */
+  var se = document.getElementById("sideEtapas");
+  se.innerHTML="";
+  ETP.forEach(function(e,i){
+    var pe = calcPrecio(id,i);
+    var row = document.createElement("div");
+    row.className = "ec-row"+(i===etapaGlobal?" cur":"");
+    var diff = i===0?"":"+"+((e.f-1)*100).toFixed(1)+"%";
+    row.innerHTML='<span class="ec-lbl">'+e.sn+' '+e.lb.split("·")[1].trim()+'</span>'
+      +'<span class="ec-val">'+fm(pe)+'<span class="ec-diff">'+diff+'</span></span>';
+    se.appendChild(row);
+  });
+}
+
+/* ════════════════════════════
+   ESTATUS
+════════════════════════════ */
+window.setSt = function(s) {
+  if(!selId) return;
+  MS[selId]=s;
+  var fl=null; FLR.forEach(function(f){ f.us.forEach(function(u){ if(u.id===selId) fl=f; }); });
+  var el=document.getElementById("mu-"+selId);
+  if(el){ el.className="u "+s+" sel pp"+(fl&&fl.ph?" ph":""); setTimeout(function(){ el.classList.remove("pp"); },260); }
+  document.querySelectorAll(".sb").forEach(function(b){ b.classList.toggle("on",b.classList.contains(s)); });
+  upC(); fbWrite();
+};
+
+document.getElementById("snotes").addEventListener("input",function(){
+  if(!selId) return;
+  MN[selId]=this.value; fbWrite();
+});
+
+/* ════════════════════════════
+   CONTADOR
+════════════════════════════ */
+function upC(){
+  var c={d:0,c:0,r:0,v:0};
+  Object.keys(MS).forEach(function(k){ if(c[MS[k]]!==undefined) c[MS[k]]++; });
+  document.getElementById("cntD").textContent=c.d;
+  document.getElementById("cntC").textContent=c.c;
+  document.getElementById("cntR").textContent=c.r;
+  document.getElementById("cntV").textContent=c.v;
+}
+
+/* ════════════════════════════
+   IR A CALCULADORA
+════════════════════════════ */
+window.goCalc = function() {
+  if(!selId) return;
+  var tp = U2T[selId];
+  var d  = UDATOS[selId];
+  if(!d) return;
+  var u=null; AU.forEach(function(x){ if(x.id===selId) u=x; });
+
+  /* Mapeo tipo para selector visual */
+  var tMap = {"A1":"A1","A2":"A2","B":"B","PH":"PH","OF":"OF","LC":"LC"};
+  CT.tid = tMap[tp] || "A1";
+  CT.uid = selId;      /* guardamos la unidad exacta */
+  CT.pm  = d.pm;       /* precio/m² real de esa unidad */
+  CT.nv  = UN[selId];
+  CT.et  = etapaGlobal;
+  CT.en  = 30;
+  CT.pl  = 24;
+
+  document.getElementById("pmInput").value = d.pm;
+  document.getElementById("bn").classList.add("on");
+  document.getElementById("bnu").textContent = u.cl+" · "+u.tp+" · "+u.m2;
+  bldTS(); bldUS(); bldNS(); bldES(); cR();
+  sv("C");
+};
+
+/* ════════════════════════════
+   BUILD CALCULADORA
+════════════════════════════ */
+function bldTS() {
+  var c=document.getElementById("tiposBtns"); c.innerHTML="";
+  TIPOS.forEach(function(t){
+    var b=document.createElement("button");
+    b.className="tipo-btn"+(t.id===CT.tid?" on":"");
+    b.textContent=t.lb+" · "+t.ds;
+    b.onclick=(function(tp){ return function(){
+      CT.tid=tp.id; CT.pm=tp.pm; CT.uid=null;
+      document.getElementById("pmInput").value=tp.pm;
+      document.getElementById("bn").classList.remove("on");
+      bldTS(); bldUS(); bldNS(); cR();
+    }; })(t);
+    c.appendChild(b);
+  });
+}
+
+/* Mapeo inverso: tipo → lista de unidades */
+function getUnidadesPorTipo(tid) {
+  var list = [];
+  /* Map tipo button id to U2T values */
+  var tipoMap = {"A1":["A1"],"A2":["A2"],"B":["B"],"PH":["PH"],"OF":["OF"],"LC":["LC"]};
+  var vals = tipoMap[tid] || [];
+  AU.forEach(function(u){
+    var ut = U2T[u.id];
+    if(vals.indexOf(ut) >= 0) list.push(u);
+  });
+  return list;
+}
+
+function bldUS() {
+  var c=document.getElementById("unidadBtns"); c.innerHTML="";
+  var info=document.getElementById("unidadInfo");
+  info.className="unidad-info"; info.innerHTML="";
+  var units = getUnidadesPorTipo(CT.tid);
+  if(units.length === 0) return;
+
+  units.forEach(function(u){
+    var d = UDATOS[u.id];
+    var st = MS[u.id]||"d";
+    var stNames = {d:"Disponible",c:"En Cotización",r:"Reservado",v:"Vendido"};
+    var b = document.createElement("button");
+    b.className = "u-btn"+(CT.uid===u.id?" on":"");
+    b.innerHTML = '<span class="ub-status s'+st+'"></span>'
+      +'<span class="ub-name">'+u.cl+'</span><br>'
+      +'<span class="ub-detail">'+u.m2+' · Nv '+UN[u.id]+' · '+stNames[st]+'</span>';
+    b.onclick = (function(unit, datos){
+      return function(){
+        CT.uid = unit.id;
+        CT.nv  = UN[unit.id];
+        CT.pm  = datos.pm;
+        document.getElementById("pmInput").value = datos.pm;
+        /* Update banner */
+        document.getElementById("bn").classList.add("on");
+        document.getElementById("bnu").textContent = unit.cl+" · "+unit.tp+" · "+unit.m2;
+        bldUS(); bldNS(); cR();
+      };
+    })(u, d);
+    c.appendChild(b);
+  });
+
+  /* Si hay unidad seleccionada, mostrar info */
+  if(CT.uid && UDATOS[CT.uid]) {
+    var ud = UDATOS[CT.uid];
+    var uu = null; AU.forEach(function(x){ if(x.id===CT.uid) uu=x; });
+    if(uu) {
+      var nf = NF[String(UN[CT.uid])] || 1;
+      info.className = "unidad-info on";
+      info.innerHTML = '<span class="ui-lbl">Superficie:</span> <span class="ui-val">'+ud.m2.toFixed(2)+' m²</span>'
+        +' &nbsp;·&nbsp; <span class="ui-lbl">Nivel:</span> <span class="ui-val">'+UN[CT.uid]+'</span>'
+        +' &nbsp;·&nbsp; <span class="ui-lbl">Cajones:</span> <span class="ui-val">'+ud.cj+'</span>'
+        +' &nbsp;·&nbsp; <span class="ui-lbl">Factor nivel:</span> <span class="ui-val">'+nf.toFixed(3)+'×</span>';
+    }
+  }
+}
+
+function bldNS() {
+  var c=document.getElementById("nvBtns"); c.innerHTML="";
+  var t=TIPOS.filter(function(x){ return x.id===CT.tid; })[0];
+  if(!t) return;
+  var nvs;
+  if(t.tp==="p") nvs=[9];
+  else if(t.tp==="o") nvs=[2,3];
+  else if(t.tp==="l") nvs=["PB"];
+  else nvs=[4,5,6,7,8];
+  /* Si el nivel actual no está en la lista (ej. cambio de tipo), usar el primero */
+  if(nvs.indexOf(CT.nv)<0 && nvs.map(String).indexOf(String(CT.nv))<0) CT.nv=nvs[0];
+  nvs.forEach(function(n){
+    var b=document.createElement("button");
+    b.className="nvb"+(String(n)===String(CT.nv)?" on":"");
+    b.textContent=n==="PB"?"PB":"Niv "+n;
+    b.onclick=(function(nv){ return function(){ CT.nv=nv; bldNS(); cR(); }; })(n);
+    c.appendChild(b);
+  });
+}
+
+function bldES() {
+  var c=document.getElementById("etBtns"); c.innerHTML="";
+  ETP.forEach(function(e,i){
+    var b=document.createElement("button");
+    b.className="etb"+(i===CT.et?" on":"");
+    b.textContent=e.sn;
+    b.onclick=(function(idx){ return function(){ CT.et=idx; bldES(); cR(); }; })(i);
+    c.appendChild(b);
+  });
+}
+
+/* ════════════════════════════
+   CALCULAR
+════════════════════════════ */
+function cR() {
+  var pA  = calcCalc();
+  var pE4 = calcCalcEt(3);
+  var eng = pA*(CT.en/100);
+  var sal = pA-eng;
+  var men = sal/CT.pl;
+  var rT  = ((pE4-pA)/pA*100);
+
+  document.getElementById("payEtLbl").textContent = ETP[CT.et].lb;
+  document.getElementById("payTotal").textContent = fm(pA);
+  document.getElementById("eFac").textContent =
+    "Factor etapa: "+ETP[CT.et].f.toFixed(3)+"×  ·  Factor nivel: "+(NF[String(CT.nv)]||1).toFixed(3)+"×";
+
+  document.getElementById("roiLbl").textContent = CT.et===0?"Plusvalía E1 → E4":"Plusvalía E"+(CT.et+1)+"→ E4";
+  document.getElementById("projRoiT").textContent = (rT>=0?"+":"")+rT.toFixed(1)+"%";
+
+  /* Pagos */
+  document.getElementById("payEngLbl").textContent  = "Enganche ("+CT.en+"%)";
+  document.getElementById("payEngLbl2").textContent = "Enganche ("+CT.en+"%)";
+  document.getElementById("payEngVal").textContent  = fm(eng);
+  document.getElementById("paySaldo").textContent   = fm(sal);
+  document.getElementById("mMensLbl").textContent   = "Mensualidad ("+CT.pl+" meses)";
+  document.getElementById("payMens").textContent    = fm(men)+" /mes";
+
+  /* Tabla comparativa */
+  var tbody=document.getElementById("cmpBody"); tbody.innerHTML="";
+  ETP.forEach(function(e,i){
+    var pe=calcCalcEt(i);
+    var tr=document.createElement("tr");
+    if(i===CT.et) tr.className="cur";
+    var diff;
+    if(i<CT.et)     diff='<span class="passed">ya pasó</span>';
+    else if(i===CT.et) diff='<span style="color:var(--cafe)">↑ entrada</span>';
+    else diff='<span class="diff">+'+((e.f-ETP[CT.et].f)/ETP[CT.et].f*100).toFixed(1)+"%</span>";
+    tr.innerHTML="<td>"+e.lb+"</td><td>"+fm(pe)+"</td><td>"+diff+"</td>";
+    tbody.appendChild(tr);
+  });
+}
+
+/* Sliders */
+document.getElementById("engRange").addEventListener("input",function(){
+  CT.en=parseInt(this.value);
+  document.getElementById("engLabel").textContent=this.value+"%";
+  cR();
+});
+document.getElementById("plzRange").addEventListener("input",function(){
+  CT.pl=parseInt(this.value);
+  document.getElementById("plzLabel").textContent=this.value+" meses";
+  cR();
+});
+document.getElementById("pmInput").addEventListener("input",function(){
+  CT.pm=parseFloat(this.value)||CT.pm; cR();
+});
+
+/* ════════════════════════════
+   RESUMEN EJECUTIVO
+════════════════════════════ */
+function buildResumen() {
+  var empty = document.getElementById("res-empty");
+  var content = document.getElementById("res-content");
+
+  /* Necesitamos al menos una unidad o tipo seleccionado */
+  var hasUnit = CT.uid && UDATOS[CT.uid];
+
+  if(!hasUnit) {
+    empty.style.display = "block";
+    content.classList.remove("on");
+    return;
+  }
+
+  empty.style.display = "none";
+  content.classList.add("on");
+
+  var ud = UDATOS[CT.uid];
+  var uu = null; AU.forEach(function(x){ if(x.id===CT.uid) uu=x; });
+  if(!uu) return;
+
+  var nv = UN[CT.uid];
+  var nf = NF[String(nv)] || 1;
+  var pA = calcCalcEt(CT.et);
+  var pE4 = calcCalcEt(3);
+  var eng = pA * (CT.en / 100);
+  var sal = pA - eng;
+  var men = sal / CT.pl;
+  var rT = ((pE4 - pA) / pA * 100);
+
+  /* Fecha */
+  var hoy = new Date();
+  var meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  document.getElementById("resDate").textContent = hoy.getDate()+" de "+meses[hoy.getMonth()]+" de "+hoy.getFullYear();
+
+  /* Unit card */
+  document.getElementById("resClave").textContent = uu.cl;
+  document.getElementById("resTipo").textContent = uu.tp;
+  document.getElementById("resM2").textContent = ud.m2.toFixed(2)+" m²";
+  document.getElementById("resNivel").textContent = nv==="PB"?"Planta Baja":"Nivel "+nv;
+  document.getElementById("resCajones").textContent = ud.cj;
+  /* Precio */
+  document.getElementById("resEtapaLbl").textContent = ETP[CT.et].lb;
+  document.getElementById("resPrecio").textContent = fm(pA);
+  document.getElementById("resPM").textContent = "$"+CT.pm.toLocaleString("es-MX")+"/m²";
+
+  /* Plusvalia */
+  document.getElementById("resPVLbl").textContent = CT.et===0?"Plusvalía E1 → E4":"Plusvalía E"+(CT.et+1)+" → E4";
+  document.getElementById("resPV").textContent = (rT>=0?"+":"")+rT.toFixed(1)+"%";
+
+  /* Pago */
+  document.getElementById("resEngLbl").textContent = "Enganche ("+CT.en+"%)";
+  document.getElementById("resEngVal").textContent = fm(eng);
+  document.getElementById("resSaldo").textContent = fm(sal);
+  document.getElementById("resMensLbl").textContent = "Mensualidad ("+CT.pl+" meses)";
+  document.getElementById("resMens").textContent = fm(men)+"/mes";
+
+  /* Comparativa */
+  var tbody = document.getElementById("resCmpBody"); tbody.innerHTML="";
+  ETP.forEach(function(e,i){
+    var pe = calcCalcEt(i);
+    var tr = document.createElement("tr");
+    if(i===CT.et) tr.className="cur";
+    var diff;
+    if(i<CT.et)      diff='<span class="passed">ya pasó</span>';
+    else if(i===CT.et) diff='<span style="color:var(--cafe)">← etapa actual</span>';
+    else diff='<span class="diff">+'+((e.f-ETP[CT.et].f)/ETP[CT.et].f*100).toFixed(1)+"%</span>";
+    tr.innerHTML="<td>"+e.lb+"</td><td>"+fm(pe)+"</td><td>"+diff+"</td>";
+    tbody.appendChild(tr);
+  });
+}
+
+/* ════════════════════════════
+   COMPARADOR
+════════════════════════════ */
+var CMP = { sel: [], et: 0, en: 30, pl: 24 };
+
+function buildCmp() {
+  buildCmpGrid();
+  buildCmpChips();
+  buildCmpEtBtns();
+  buildCmpTable();
+}
+
+function cmpToggle(uid) {
+  var idx = CMP.sel.indexOf(uid);
+  if(idx >= 0) {
+    CMP.sel.splice(idx, 1);
+  } else {
+    if(CMP.sel.length >= 3) return;
+    CMP.sel.push(uid);
+  }
+  buildCmpGrid();
+  buildCmpChips();
+  buildCmpTable();
+}
+
+function cmpRemove(uid) {
+  var idx = CMP.sel.indexOf(uid);
+  if(idx >= 0) CMP.sel.splice(idx, 1);
+  buildCmpGrid();
+  buildCmpChips();
+  buildCmpTable();
+}
+
+/* Unit grid grouped by floor */
+function buildCmpGrid() {
+  var wrap = document.getElementById("cmpUnitGrid");
+  wrap.innerHTML = "";
+  var full = CMP.sel.length >= 3;
+
+  FLR.forEach(function(fl) {
+    var title = document.createElement("div");
+    title.className = "cmp-ugrid-title";
+    title.textContent = fl.lb.replace("\n"," ");
+    wrap.appendChild(title);
+
+    var grid = document.createElement("div");
+    grid.className = "cmp-ugrid";
+
+    fl.us.forEach(function(u) {
+      var st = MS[u.id] || "d";
+      var isOn = CMP.sel.indexOf(u.id) >= 0;
+      var b = document.createElement("button");
+      b.className = "cmp-ubtn" + (isOn ? " on" : "") + (full && !isOn ? " full" : "");
+      b.innerHTML = '<span class="cu-dot s' + st + '"></span>' + u.cl;
+      b.onclick = (function(uid) { return function() { cmpToggle(uid); }; })(u.id);
+      grid.appendChild(b);
+    });
+
+    wrap.appendChild(grid);
+  });
+}
+
+/* Selected chips */
+function buildCmpChips() {
+  var c = document.getElementById("cmpChips");
+  c.innerHTML = "";
+  if(CMP.sel.length === 0) {
+    c.innerHTML = '<span class="cmp-empty-hint">← Selecciona unidades abajo</span>';
+    return;
+  }
+  CMP.sel.forEach(function(uid) {
+    var u = null; AU.forEach(function(x) { if(x.id === uid) u = x; });
+    if(!u) return;
+    var st = MS[uid] || "d";
+    var chip = document.createElement("span");
+    chip.className = "cmp-chip";
+    chip.innerHTML = '<span class="cc-dot s' + st + '"></span>'
+      + u.cl + ' · ' + u.m2
+      + '<span class="cc-x" onclick="cmpRemove(\'' + uid + '\')">✕</span>';
+    c.appendChild(chip);
+  });
+}
+
+/* Etapa buttons */
+function buildCmpEtBtns() {
+  var c = document.getElementById("cmpEtBtns");
+  c.innerHTML = "";
+  ETP.forEach(function(e, i) {
+    var b = document.createElement("button");
+    b.className = "cmp-etb" + (i === CMP.et ? " on" : "");
+    b.textContent = e.sn;
+    b.onclick = (function(idx) { return function() {
+      CMP.et = idx;
+      buildCmpEtBtns();
+      buildCmpTable();
+    }; })(i);
+    c.appendChild(b);
+  });
+}
+
+/* Comparison table */
+function buildCmpTable() {
+  var empty = document.getElementById("cmpEmpty");
+  var wrap = document.getElementById("cmpTblWrap");
+
+  if(CMP.sel.length === 0) {
+    empty.style.display = "block";
+    wrap.style.display = "none";
+    return;
+  }
+  empty.style.display = "none";
+  wrap.style.display = "block";
+
+  var stNames = {d:"Disponible",c:"En Cotización",r:"Reservado",v:"Vendido"};
+
+  /* Gather data for each selected unit */
+  var cols = [];
+  CMP.sel.forEach(function(uid) {
+    var u = null; AU.forEach(function(x) { if(x.id === uid) u = x; });
+    var d = UDATOS[uid];
+    if(!u || !d) return;
+
+    var nv = UN[uid];
+    var nf = NF[String(nv)] || 1;
+    var tp = U2T[uid];
+    var precio = calcPrecio(uid, CMP.et);
+    var precioE4 = calcPrecio(uid, 3);
+    var eng = precio * (CMP.en / 100);
+    var sal = precio - eng;
+    var men = sal / CMP.pl;
+    var pv = CMP.et < 3 ? ((precioE4 - precio) / precio * 100) : 0;
+    var pm2 = d.pm * ((tp==="A1"||tp==="A2"||tp==="B"||tp==="PH") ? nf : 1) * ETP[CMP.et].f;
+
+    cols.push({
+      uid: uid,
+      clave: u.cl,
+      tipo: u.tp,
+      m2: d.m2,
+      nv: nv === "PB" ? "PB" : nv,
+      cj: d.cj,
+      st: MS[uid] || "d",
+      pm2: pm2,
+      precio: precio,
+      eng: eng,
+      sal: sal,
+      men: men,
+      pv: pv
+    });
+  });
+
+  /* Build table HTML */
+  var html = "<thead><tr><th></th>";
+  cols.forEach(function(c) {
+    html += '<th class="col-unit">' + c.clave + '</th>';
+  });
+  html += "</tr></thead><tbody>";
+
+  var rows = [
+    { lb: "Tipología",      fn: function(c){ return c.tipo; } },
+    { lb: "Estatus",        fn: function(c){ return stNames[c.st]; } },
+    { lb: "Superficie",     fn: function(c){ return c.m2.toFixed(2) + " m²"; } },
+    { lb: "Nivel",          fn: function(c){ return c.nv === "PB" ? "Planta Baja" : "Nivel " + c.nv; } },
+    { lb: "Cajones",        fn: function(c){ return c.cj; } },
+    { lb: "Precio / m²",    fn: function(c){ return fm(c.pm2) + "/m²"; } },
+    { lb: "Precio Total",   fn: function(c){ return fm(c.precio); }, hero: true },
+    { lb: "Enganche (" + CMP.en + "%)", fn: function(c){ return fm(c.eng); } },
+    { lb: "Saldo",          fn: function(c){ return fm(c.sal); } },
+    { lb: "Mensualidad (" + CMP.pl + " m)", fn: function(c){ return fm(c.men) + "/mes"; } },
+    { lb: "Plusvalía → E4", fn: function(c){ return c.pv > 0 ? "+" + c.pv.toFixed(1) + "%" : "—"; }, badge: true }
+  ];
+
+  rows.forEach(function(r) {
+    html += "<tr><td class=\"lbl-cell\">" + r.lb + "</td>";
+    cols.forEach(function(c) {
+      var val = r.fn(c);
+      var cls = "val-cell";
+      if(r.hero) cls += " hero";
+      if(r.badge && val !== "—") {
+        val = '<span class="pv-badge">' + val + '</span>';
+      }
+      html += '<td class="' + cls + '">' + val + '</td>';
+    });
+    html += "</tr>";
+  });
+
+  html += "</tbody>";
+  document.getElementById("cmpTbl").innerHTML = html;
+}
+
+/* Comparador slider listeners */
+document.getElementById("cmpEngRange").addEventListener("input", function() {
+  CMP.en = parseInt(this.value);
+  document.getElementById("cmpEngLbl").textContent = CMP.en + "%";
+  buildCmpTable();
+});
+document.getElementById("cmpPlzRange").addEventListener("input", function() {
+  CMP.pl = parseInt(this.value);
+  document.getElementById("cmpPlzLbl").textContent = CMP.pl + " meses";
+  buildCmpTable();
+});
+
+/* ════════════════════════════
+   INIT
+════════════════════════════ */
+(function init() {
+  fbRead();
+  bldTS(); bldUS(); bldNS(); bldES(); cR();
+  setEtapaGlobal(0);
+})();
+</script>
+</body>
+</html>
